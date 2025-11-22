@@ -1317,10 +1317,6 @@ static inline void netif_threaded_enable(struct net_device *dev) { }
 #define CONFIG_PM_USERSPACE_AUTOSLEEP CONFIG_ANDROID
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
-#define COMPAT_CANNOT_USE_PCPU_STAT_TYPE
-#endif
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 15, 0)
 #define COMPAT_CANNOT_USE_RTNL_NEWLINK_PARAMS
 struct rtnl_newlink_params {

@@ -246,9 +246,7 @@ static const struct net_device_ops netdev_ops = {
 	.ndo_open		= wg_open,
 	.ndo_stop		= wg_stop,
 	.ndo_start_xmit		= wg_xmit,
-#ifndef COMPAT_CANNOT_USE_PCPU_STAT_TYPE
 	.ndo_get_stats64 = dev_get_tstats64
-#endif
 };
 
 static void wg_destruct(struct net_device *dev)
@@ -277,9 +275,7 @@ static void wg_destruct(struct net_device *dev)
 	rcu_barrier(); /* Wait for all the peers to be actually freed. */
 	wg_ratelimiter_uninit();
 	memzero_explicit(&wg->static_identity, sizeof(wg->static_identity));
-#ifdef COMPAT_CANNOT_USE_PCPU_STAT_TYPE
 	free_percpu(dev->tstats);
-#endif
 	kvfree(wg->index_hashtable);
 	kvfree(wg->peer_hashtable);
 	mutex_unlock(&wg->device_update_lock);
@@ -323,9 +319,6 @@ static void wg_setup(struct net_device *dev)
 	dev->mtu = ETH_DATA_LEN - overhead;
 #ifndef COMPAT_CANNOT_USE_MAX_MTU
 	dev->max_mtu = round_down(INT_MAX, MESSAGE_PADDING_MULTIPLE) - overhead;
-#endif
-#ifndef COMPAT_CANNOT_USE_PCPU_STAT_TYPE
-	dev->pcpu_stat_type = NETDEV_PCPU_STAT_TSTATS;
 #endif
 
 	SET_NETDEV_DEVTYPE(dev, &device_type);
@@ -381,11 +374,9 @@ static int wg_newlink(struct net_device *dev,
 	if (!wg->index_hashtable)
 		goto err_free_peer_hashtable;
 
-#ifdef COMPAT_CANNOT_USE_PCPU_STAT_TYPE
 	dev->tstats = netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
 	if (!dev->tstats)
 		goto err_free_index_hashtable;
-#endif
 
 	wg->handshake_receive_wq = alloc_workqueue("wg-kex-%s",
 			WQ_CPU_INTENSIVE | WQ_FREEZABLE, 0, dev->name);
@@ -451,10 +442,8 @@ err_destroy_handshake_send:
 err_destroy_handshake_receive:
 	destroy_workqueue(wg->handshake_receive_wq);
 err_free_tstats:
-#ifdef COMPAT_CANNOT_USE_PCPU_STAT_TYPE
 	free_percpu(dev->tstats);
 err_free_index_hashtable:
-#endif
 	kvfree(wg->index_hashtable);
 err_free_peer_hashtable:
 	kvfree(wg->peer_hashtable);
